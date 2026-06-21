@@ -13,7 +13,10 @@
 
 import { PrismaPg } from "@prisma/adapter-pg";
 import { DATABASE_URL } from "../config/config.js";
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@prisma/client";
+import dns from "dns";
+
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 const connectionString = `${DATABASE_URL}`;
 
