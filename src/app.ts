@@ -3,7 +3,7 @@ import express, { Request, Response } from "express";
 import cors from 'cors';
 import { FRONTEND_URL } from "./config/config.js";
 import dns from "dns";
-import { globalErrorHandler } from "./middleware/globalErrorHandler.js";
+import { globalErrorHandler } from "./middleware/error.middleware.js";
 
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
 

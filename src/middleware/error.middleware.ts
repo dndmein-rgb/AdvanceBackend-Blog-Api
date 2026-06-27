@@ -27,13 +27,13 @@ export async function globalErrorHandler(
   if (error.isOperational) {
     return res.status(error.statusCode).json({
       message: error.message,
-      status: error.message,
+      status: error.status,
     });
   }
 
   //Unknown errors
   return res.status(500).json({
-    message: "Somenthing went wrong",
+    message: "Something went wrong",
     status: "error",
   });
 }
