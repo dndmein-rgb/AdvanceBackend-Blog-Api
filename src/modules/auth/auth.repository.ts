@@ -30,11 +30,26 @@ export const authRepository = {
     return createdUser;
   },
 
-  createRefreshtoken:async(data:{
-    token:string,
-    userId:string,
-    expiresAt:Date
-  })=>{
-    return await prisma.refreshToken.create({data})
+  createRefreshtoken: async (data: {
+    token: string;
+    userId: string;
+    expiresAt: Date;
+  }) => {
+    return await prisma.refreshToken.create({ data });
+  },
+
+  findRefreshToken: async (token: string) => {
+    const refreshToken = await prisma.refreshToken.findUnique({
+      where: {
+        token,
+      },
+    });
+    return refreshToken;
+  },
+
+  deleteRefreshTokenById:async(id:string)=>{
+    return await prisma.refreshToken.delete({
+      where:{id}
+    })
   }
 };

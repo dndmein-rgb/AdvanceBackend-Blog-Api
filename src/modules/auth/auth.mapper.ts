@@ -1,6 +1,7 @@
 import { IUserResponse } from "../../types/index.js";
+import { UserResponseDTO } from "./auth.repsonse.js";
 
-export const toUserResponse = (user: IUserResponse) => {
+export const toUserResponse = (user: IUserResponse):UserResponseDTO => {
   return {
     id: user.id,
     username: user.username,
