@@ -1,4 +1,4 @@
-import { IJwtPayload } from "../../types/index.js";
+import { IJwtPayload, IUserResponse } from "../../types/index.js";
 import { AppError } from "../../utils/AppError.js";
 import {
   comparePassword,
@@ -46,7 +46,7 @@ export const authService = {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
     return {
-      newUser: toUserResponse(newUser),
+      user: toUserResponse(newUser),
       accessToken,
       refreshToken,
     };
@@ -120,4 +120,11 @@ export const authService = {
       refreshToken:newRefreshToken
     }
   },
+
+  getCurrentUser:async(user:IUserResponse)=>{
+
+    return {
+      user:toUserResponse(user)
+    }
+  }
 };

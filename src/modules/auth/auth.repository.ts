@@ -1,7 +1,6 @@
-import { prisma } from "../../lib/prisma.js";
 import dns from "dns";
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
-import { hashPassword } from "../../utils/auth.helper.js";
+import { prisma } from "../../lib/prisma.js";
 
 export const authRepository = {
   findUserByUsername: async (username: string) => {
@@ -18,6 +17,13 @@ export const authRepository = {
     });
     return user;
   },
+  findUserById:async(id:string)=>{
+    const user=await prisma.user.findUnique({
+      where:{id}
+    })
+    return user;
+  }
+  ,
 
   createUser: async (username: string, email: string, password: string) => {
     const createdUser = await prisma.user.create({

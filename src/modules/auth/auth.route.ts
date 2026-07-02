@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  currentUserController,
   loginUserController,
   refreshTokenController,
   registerUserController,
@@ -10,6 +11,7 @@ import {
   refreshtokenSchema,
   registerUserSchema,
 } from "./auth.schema.js";
+import { verifyUser } from "../../middleware/auth.middleware.js";
 
 const router = express();
 
@@ -24,5 +26,7 @@ router
 router
   .route("/refreshToken")
   .post(validate(refreshtokenSchema), refreshTokenController);
+
+router.route("/me").get(verifyUser,currentUserController)
 
 export default router;
