@@ -38,14 +38,35 @@ export const refreshTokenController = catchAsync(
   },
 );
 
-export const currentUserController=catchAsync(async(req:Request,res:Response)=>{
-  const result=await authService.getCurrentUser(req.user! )
+export const currentUserController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await authService.getCurrentUser(req.user!);
 
-sendResponse(res,200,{
+    sendResponse(res, 200, {
+      success: true,
+      message: "User details fetched succesfully",
+      data: result,
+    });
+  },
+);
+export const logoutUserController = catchAsync(
+  async (req: Request, res: Response) => {
+    // const {refreshToken}=req.body;
+
+  const result= await authService.logout(req.body);
+
+  sendResponse(res,200,{
     success:true,
-    message:"User details fetched succesfully",
-    data:result
-})
-}
+    message:"Logged out successfully",
+  })
+  },
+);
 
-)
+export const logoutFromAllDevicesController=catchAsync(async(req:Request,res:Response)=>{
+  await authService.logoutAllDevices(req.user?.id as string)
+
+  sendResponse(res,200,{
+    success:true,
+    message:"Logged out from all devices"
+  })
+})

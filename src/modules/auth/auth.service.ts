@@ -1,3 +1,4 @@
+import { prisma } from "../../lib/prisma.js";
 import { IJwtPayload, IUserResponse } from "../../types/index.js";
 import { AppError } from "../../utils/AppError.js";
 import {
@@ -12,7 +13,7 @@ import {
 } from "../../utils/jwt.helper.js";
 import { toUserResponse } from "./auth.mapper.js";
 import { authRepository } from "./auth.repository.js";
-import { loginUserDTO, refreshTokenDTO, registerUserDTO } from "./auth.schema.js";
+import { loginUserDTO, logoutUserDto, refreshTokenDTO, registerUserDTO } from "./auth.schema.js";
 
 export const authService = {
   registerUser: async (body: registerUserDTO) => {
@@ -126,5 +127,30 @@ export const authService = {
     return {
       user:toUserResponse(user)
     }
+  },
+
+  logout:async(body:logoutUserDto)=>{
+    const {refreshToken}=body;
+    const hashedToken=hashRefreshToken(refreshToken);
+
+    await authRepository.deleteRefreshTokenByToken(hashedToken);
+    return true;
+  },
+
+  Logout:async(refreshToken:string)=>{
+  if(!refreshToken){
+    throw new AppError("Refresh Token required",401)
+  }
+  const refreshTokenHashed=hashRefreshToken(refreshToken);
+  const existingToken= await authRepository.findRefreshToken(refreshTokenHashed);
+
+  if(!existingToken){
+    throw new AppError("Refresh token not found",404);
+  }
+  await authRepository.deleteRefreshTokenById(existingToken.id)
+  },
+
+  logoutAllDevices:async(userId:string)=>{
+     await authRepository.deleteAllRefreshTokensByUserId(userId);
   }
 };

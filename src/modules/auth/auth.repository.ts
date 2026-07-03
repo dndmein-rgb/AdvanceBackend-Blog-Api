@@ -17,14 +17,12 @@ export const authRepository = {
     });
     return user;
   },
-  findUserById:async(id:string)=>{
-    const user=await prisma.user.findUnique({
-      where:{id}
-    })
+  findUserById: async (id: string) => {
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
     return user;
-  }
-  ,
-
+  },
   createUser: async (username: string, email: string, password: string) => {
     const createdUser = await prisma.user.create({
       data: {
@@ -53,9 +51,28 @@ export const authRepository = {
     return refreshToken;
   },
 
-  deleteRefreshTokenById:async(id:string)=>{
+
+  findRefreshTokenByUserId: async (userId: string) => {
+    return await prisma.refreshToken.findMany({
+      where: { userId },
+    });
+  },
+
+  deleteRefreshTokenById: async (id: string) => {
     return await prisma.refreshToken.delete({
-      where:{id}
-    })
-  }
+      where: { id },
+    });
+  },
+
+  deleteRefreshTokenByToken: async (token: string) => {
+    return await prisma.refreshToken.deleteMany({
+      where: { token },
+    });
+  },
+
+  deleteAllRefreshTokensByUserId: async (userId: string) => {
+    return prisma.refreshToken.deleteMany({
+      where: { userId },
+    });
+  },
 };
