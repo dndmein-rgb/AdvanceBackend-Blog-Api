@@ -1,4 +1,3 @@
-import { prisma } from "../../lib/prisma.js";
 import { IJwtPayload, IUserResponse } from "../../types/index.js";
 import { AppError } from "../../utils/AppError.js";
 import {
@@ -9,39 +8,43 @@ import {
 import {
   generateAccessToken,
   generateRefreshToken,
+  verifyAccessToken,
   verifyRefreshToken,
 } from "../../utils/jwt.helper.js";
+import { IAuthRepository } from "./auth.interface.js";
 import { toUserResponse } from "./auth.mapper.js";
-import { authRepository } from "./auth.repository.js";
-import { loginUserDTO, logoutUserDto, refreshTokenDTO, registerUserDTO } from "./auth.schema.js";
+import {
+  loginUserDTO,
+  logoutUserDto,
+  refreshTokenDTO,
+  registerUserDTO,
+} from "./auth.schema.js";
 
-export const authService = {
-  registerUser: async (body: registerUserDTO) => {
+
+export class AuthService {
+  constructor(private readonly repo: IAuthRepository) {}
+
+  async registerUser(body: registerUserDTO) {
     const { username, email, password } = body;
 
-    const existingUserByUsername =
-      await authRepository.findUserByUsername(username);
+    const existingUserByUsername = await this.repo.findUserByUsername(username);
     if (existingUserByUsername) {
       throw new AppError("User already exists", 400);
     }
 
-    const existingUserByEmail = await authRepository.findUserByEmail(email);
+    const existingUserByEmail = await this.repo.findUserByEmail(email);
     if (existingUserByEmail) {
       throw new AppError("User already exists", 400);
     }
     const hashedPassword = await hashPassword(password);
-    const newUser = await authRepository.createUser(
-      username,
-      email,
-      hashedPassword,
-    );
+    const newUser = await this.repo.createUser(username, email, hashedPassword);
 
     const accessToken = generateAccessToken(newUser.id);
     const refreshToken = generateRefreshToken(newUser.id);
 
     const hashedRefreshToken = hashRefreshToken(refreshToken);
 
-    await authRepository.createRefreshtoken({
+    await this.repo.createRefreshToken({
       token: hashedRefreshToken,
       userId: newUser.id,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -51,12 +54,11 @@ export const authService = {
       accessToken,
       refreshToken,
     };
-  },
-
-  loginUser: async (body: loginUserDTO) => {
+  }
+  async loginUser(body: loginUserDTO) {
     const { email, password } = body;
 
-    const user = await authRepository.findUserByEmail(email);
+    const user = await this.repo.findUserByEmail(email);
 
     if (!user) {
       throw new AppError("Invalid Credentials", 404);
@@ -73,7 +75,7 @@ export const authService = {
 
     const hashedRefreshtoken = hashRefreshToken(refreshToken);
 
-    await authRepository.createRefreshtoken({
+    await this.repo.createRefreshToken({
       token: hashedRefreshtoken,
       userId: user.id,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -83,13 +85,14 @@ export const authService = {
       accessToken,
       refreshToken,
     };
-  },
-  refreshToken: async (body:refreshTokenDTO) => {
-    const {token}=body
+  }
+
+  async refreshToken(body: refreshTokenDTO) {
+    const { token } = body;
     if (!token) {
       throw new AppError("Token is required", 401);
     }
-    let decoded;
+    let decoded: IJwtPayload;
     try {
       decoded = verifyRefreshToken(token) as IJwtPayload;
     } catch {
@@ -97,60 +100,63 @@ export const authService = {
     }
     const hashedToken = hashRefreshToken(token);
 
-    const existingToken = await authRepository.findRefreshToken(hashedToken);
+    const existingToken = await this.repo.findRefreshToken(hashedToken);
     if (!existingToken) {
       throw new AppError("Refresh token not found", 403);
     }
 
-    //Rotating the token
+    //  Rotating the token
 
-    await authRepository.deleteRefreshTokenById(existingToken.id);
+    await this.repo.deleteRefreshTokenById(existingToken.id);
 
     const newAccessToken = generateAccessToken(decoded.userId);
     const newRefreshToken = generateRefreshToken(decoded.userId);
 
     const newRefreshTokenHashed = hashRefreshToken(newRefreshToken);
 
-    await authRepository.createRefreshtoken({
+    await this.repo.createRefreshToken({
       token: newRefreshTokenHashed,
       userId: decoded.userId,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
-    return{
-      accessToken:newAccessToken,
-      refreshToken:newRefreshToken
-    }
-  },
-
-  getCurrentUser:async(user:IUserResponse)=>{
-
     return {
-      user:toUserResponse(user)
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    };
+  }
+
+  async getCurrentUser(user: IUserResponse) {
+    return {
+      user: toUserResponse(user),
+    };
+  }
+  async logout(body: logoutUserDto) {
+    const { refreshToken } = body;
+    if (!refreshToken) {
+      throw new AppError("Refresh Token required", 400);
     }
-  },
+    const refreshTokenHashed = hashRefreshToken(refreshToken);
+    const existingToken = await this.repo.findRefreshToken(refreshTokenHashed);
 
-  logout:async(body:logoutUserDto)=>{
-    const {refreshToken}=body;
-    const hashedToken=hashRefreshToken(refreshToken);
-
-    await authRepository.deleteRefreshTokenByToken(hashedToken);
-    return true;
-  },
-
-  Logout:async(refreshToken:string)=>{
-  if(!refreshToken){
-    throw new AppError("Refresh Token required",401)
+    if (!existingToken) {
+      return;
+    }
+    await this.repo.deleteRefreshTokenById(existingToken.id);
   }
-  const refreshTokenHashed=hashRefreshToken(refreshToken);
-  const existingToken= await authRepository.findRefreshToken(refreshTokenHashed);
 
-  if(!existingToken){
-    throw new AppError("Refresh token not found",404);
+  async logoutAllDevices(userId: string) {
+    if (!userId) {
+      throw new AppError("User ID is required", 400);
+    }
+    await this.repo.deleteAllRefreshTokensByUserId(userId);
   }
-  await authRepository.deleteRefreshTokenById(existingToken.id)
-  },
 
-  logoutAllDevices:async(userId:string)=>{
-     await authRepository.deleteAllRefreshTokensByUserId(userId);
+  async authenticate(token:string){
+    const decoded=verifyAccessToken(token) as IJwtPayload
+    const user=await this.repo.findUserById(decoded.userId);
+    if(!user){
+      throw new AppError("Unauthorized request",401)
+    }
+    return user
   }
-};
+}

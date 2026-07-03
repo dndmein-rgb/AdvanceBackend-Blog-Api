@@ -15,8 +15,9 @@ import {
   registerUserSchema,
 } from "./auth.schema.js";
 import { verifyUser } from "../../middleware/auth.middleware.js";
+import { authService } from "./conatiner.js";
 
-const router = express();
+const router = express.Router();
 
 router
   .route("/register")
@@ -30,14 +31,14 @@ router
 
 router
   .route("/me")
-  .get(verifyUser, currentUserController);
+  .get(verifyUser(authService), currentUserController);
 
 router
   .route("/logout")
-  .post(verifyUser, validate(logoutUserSchema), logoutUserController);
+  .post(verifyUser(authService), validate(logoutUserSchema), logoutUserController);
 
 router
   .route("/logout-all-devices")
-  .post(verifyUser,logoutFromAllDevicesController)
+  .post(verifyUser(authService),logoutFromAllDevicesController)
 
 export default router;
