@@ -1,0 +1,14 @@
+import fs from "fs";
+import cloudinary from "../lib/cloudinary.js";
+export const uploadToCloudinary = async (localFilePath: string) => {
+  try {
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: "image",
+    });
+    fs.unlinkSync(localFilePath);
+    return response.secure_url;
+  } catch (error) {
+    console.log("Error while uploading the image to cloudinary", error);
+    fs.unlinkSync(localFilePath);
+  }
+};

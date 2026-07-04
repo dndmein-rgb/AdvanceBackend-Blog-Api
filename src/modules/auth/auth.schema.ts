@@ -30,4 +30,4 @@ export const logoutUserSchema = z
 export type registerUserDTO = z.infer<typeof registerUserSchema>;
 export type loginUserDTO = z.infer<typeof loginUserSchema>;
 export type refreshTokenDTO = z.infer<typeof refreshtokenSchema>;
-export type logoutUserDto = z.infer<typeof logoutUserSchema>;
+export type logoutUserDTO = z.infer<typeof logoutUserSchema>;

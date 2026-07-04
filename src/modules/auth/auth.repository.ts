@@ -4,6 +4,17 @@ import {
   ICreateRefreshTokenDTO,
 } from "./auth.interface.js"
 
+// AuthService
+//       │
+//       ▼
+// IAuthRepository
+//       ▲
+//       │
+// PrismaAuthRepository
+//       │
+//       ▼
+// Prisma
+
 export class PrismaAuthRepository implements IAuthRepository {
   async findUserByUsername(username: string) {
     return prisma.user.findUnique({

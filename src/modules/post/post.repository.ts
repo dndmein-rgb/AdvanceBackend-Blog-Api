@@ -1,0 +1,33 @@
+import { Post } from "@prisma/client";
+import { IPostRepository } from "./post.interface.js";
+import { prisma } from "../../lib/prisma.js";
+
+export class PostRepository implements IPostRepository {
+  async createPost(
+    title: string,
+    description: string,
+    userId: string,
+    imageUrl?: string,
+  ) {
+    let createdPost;
+    if (imageUrl) {
+       createdPost = await prisma.post.create({
+        data: {
+          title,
+          description,
+          imageUrl,
+          userId,
+        },
+      });
+    }else{
+         createdPost = await prisma.post.create({
+        data: {
+          title,
+          description,
+          userId,
+        },
+      });
+    }
+    return createdPost
+  }
+}

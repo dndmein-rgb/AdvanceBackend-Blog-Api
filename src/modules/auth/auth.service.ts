@@ -8,6 +8,7 @@ import {
 import {
   generateAccessToken,
   generateRefreshToken,
+  setCookies,
   verifyAccessToken,
   verifyRefreshToken,
 } from "../../utils/jwt.helper.js";
@@ -15,7 +16,7 @@ import { IAuthRepository } from "./auth.interface.js";
 import { toUserResponse } from "./auth.mapper.js";
 import {
   loginUserDTO,
-  logoutUserDto,
+  logoutUserDTO,
   refreshTokenDTO,
   registerUserDTO,
 } from "./auth.schema.js";
@@ -80,6 +81,7 @@ export class AuthService {
       userId: user.id,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
+
     return {
       user: toUserResponse(user),
       accessToken,
@@ -130,7 +132,7 @@ export class AuthService {
       user: toUserResponse(user),
     };
   }
-  async logout(body: logoutUserDto) {
+  async logout(body: logoutUserDTO) {
     const { refreshToken } = body;
     if (!refreshToken) {
       throw new AppError("Refresh Token required", 400);
