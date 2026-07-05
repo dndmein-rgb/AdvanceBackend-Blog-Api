@@ -32,7 +32,7 @@ export class PostRepository implements IPostRepository {
     return createdPost;
   }
 
-  async getUserPostsById(userId: string) {
+  async getPostsByUserId(userId: string) {
     const posts = await prisma.post.findMany({
       where: {
         userId,
@@ -41,8 +41,17 @@ export class PostRepository implements IPostRepository {
     return posts;
   }
 
-  async getAllPosts(){
-    const posts=await prisma.post.findMany()
+  async getPostByPostId(postId: string) {
+    const post = await prisma.post.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+    return post;
+  }
+
+  async getAllPosts() {
+    const posts = await prisma.post.findMany();
     return posts;
   }
 
@@ -71,9 +80,9 @@ export class PostRepository implements IPostRepository {
 
   async deletePost(postId: string) {
     return await prisma.post.delete({
-      where:{
-        id:postId
-      }
-    })
+      where: {
+        id: postId,
+      },
+    });
   }
 }

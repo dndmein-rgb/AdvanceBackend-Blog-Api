@@ -9,7 +9,8 @@ export interface IPostRepository {
     imageUrl?: string,
   ): Promise<Post>;
 
-  getUserPostsById(userId: string): Promise<Post[]>;
+  getPostsByUserId(userId: string): Promise<Post[]>;
+  getPostByPostId(postId: string): Promise<Post | null>;
 
   getAllPosts(): Promise<Post[]>;
 
