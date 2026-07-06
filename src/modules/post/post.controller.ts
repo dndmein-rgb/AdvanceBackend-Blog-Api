@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { catchAsync } from "../../utils/CatchAsync.js";
-import { uploadToCloudinary } from "../../utils/cloudinary.helper.js";
+
 import { postService } from "./post.container.js";
 import { sendResponse } from "../../utils/sendResponse.js";
 

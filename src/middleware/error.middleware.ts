@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import fs from "fs";
 import { NODE_ENV } from "../config/config.js";
 
 export async function globalErrorHandler(
@@ -7,6 +8,15 @@ export async function globalErrorHandler(
   res: Response,
   next: NextFunction,
 ) {
+  // Clean up any uploaded temp file that wasn't processed
+  if (req.file?.path) {
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (cleanupErr) {
+      console.log("Failed to clean up temp file:", cleanupErr);
+    }
+  }
+
   let error = { ...err };
   error.message = err.message;
 
