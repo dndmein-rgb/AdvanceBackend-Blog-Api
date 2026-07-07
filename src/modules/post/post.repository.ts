@@ -2,6 +2,7 @@ import { Post } from "@prisma/client";
 import { IPostRepository } from "./post.interface.js";
 import { prisma } from "../../lib/prisma.js";
 import { updatePostDTO } from "./post.schema.js";
+import { PostListItem } from "./post.types.js";
 
 export class PostRepository implements IPostRepository {
   async createPost(
@@ -50,7 +51,7 @@ export class PostRepository implements IPostRepository {
     return post;
   }
 
-  async getAllPosts(cursor?: string ,limit: number = 5): Promise<Post[]> {
+  async getAllPosts(cursor?: string ,limit: number = 5): Promise<PostListItem[]> {
     const posts = await prisma.post.findMany({
       take: limit,
       skip: cursor ? 1 : 0,

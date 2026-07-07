@@ -1,5 +1,5 @@
 import { IUserResponse } from "../../types/index.js";
-import { UserResponseDTO } from "./auth.repsonse.js";
+import { UserResponseDTO } from "./auth.response.js";
 
 export const toUserResponse = (user: IUserResponse):UserResponseDTO => {
   return {

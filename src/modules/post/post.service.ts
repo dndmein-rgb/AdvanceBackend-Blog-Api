@@ -1,16 +1,15 @@
 import { Post } from "@prisma/client";
 import { AppError } from "../../utils/AppError.js";
-import {
-  deleteFromCloudinary,
-  uploadToCloudinary,
-} from "../../utils/cloudinary.helper.js";
 import { IPostRepository } from "./post.interface.js";
 import { createPostDTO, updatePostDTO } from "./post.schema.js";
 import { IFileService } from "../../utils/file.interface.js";
+import { toPostListResponse } from "./post.mapper.js";
+import { GetPostsResponse, PostListResponse } from "./post.response.js";
 
 export class PostService {
-  constructor(private readonly repo: IPostRepository,
-    private readonly fileService: IFileService
+  constructor(
+    private readonly repo: IPostRepository,
+    private readonly fileService: IFileService,
   ) {}
 
   async createPost(
@@ -27,14 +26,19 @@ export class PostService {
     return await this.repo.createPost(title, description, userId);
   }
 
-  async getUserPosts(userId: string): Promise<Post[]> {
+  async getUserPosts(userId: string): Promise<PostListResponse[]> {
     const posts = await this.repo.getPostsByUserId(userId);
-    return posts;
+    return toPostListResponse(posts);
   }
 
-  async getAllPosts(cursor?:string,limit?:number): Promise<Post[]> {
-    const posts = await this.repo.getAllPosts(cursor,limit);
-    return posts;
+  async getAllPosts(cursor?: string, limit?: number):Promise<GetPostsResponse> {
+    const posts = await this.repo.getAllPosts(cursor, limit);
+    return {
+      posts: toPostListResponse(posts),
+      meta: {
+        nextCursor: posts.length > 0 ? posts[posts.length - 1].id : null,
+      },
+    };
   }
 
   async updatePost(

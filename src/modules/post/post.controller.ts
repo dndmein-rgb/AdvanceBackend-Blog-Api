@@ -45,9 +45,7 @@ export const getAllPostsController = catchAsync(
       message: "Posts fetched successfully",
       data: {
         result,
-        meta: {
-          nextCursor: result.length > 0 ? result[result.length - 1].id : null,
-        },
+      
       },
     });
   },
