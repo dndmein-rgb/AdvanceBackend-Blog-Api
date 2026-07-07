@@ -1,6 +1,8 @@
 import fs from "fs";
 import cloudinary from "../lib/cloudinary.js";
-export const uploadToCloudinary = async (localFilePath: string) => {
+export const uploadToCloudinary = async (
+  localFilePath: string,
+): Promise<string> => {
   try {
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "image",
@@ -14,11 +16,11 @@ export const uploadToCloudinary = async (localFilePath: string) => {
   }
 };
 
-export const deleteFromCloudinary=async(imageUrl:string)=>{
+export const deleteFromCloudinary = async (imageUrl: string): Promise<void> => {
   try {
     const publicId = imageUrl.split("/").pop()?.split(".")[0] as string;
-    const response=await cloudinary.uploader.destroy(publicId)
+    const response = await cloudinary.uploader.destroy(publicId);
   } catch (error) {
-    console.log("Error deleting image from cloudinary",error)
+    console.log("Error deleting image from cloudinary", error);
   }
-}
+};

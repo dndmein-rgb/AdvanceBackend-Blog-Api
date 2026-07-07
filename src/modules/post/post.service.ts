@@ -1,3 +1,4 @@
+import { Post } from "@prisma/client";
 import { AppError } from "../../utils/AppError.js";
 import {
   deleteFromCloudinary,
@@ -5,42 +6,42 @@ import {
 } from "../../utils/cloudinary.helper.js";
 import { IPostRepository } from "./post.interface.js";
 import { createPostDTO, updatePostDTO } from "./post.schema.js";
+import { IFileService } from "../../utils/file.interface.js";
 
 export class PostService {
-  constructor(private readonly repo: IPostRepository) {}
+  constructor(private readonly repo: IPostRepository,
+    private readonly fileService: IFileService
+  ) {}
 
   async createPost(
     body: createPostDTO,
     userId: string,
     localFilePath?: string,
-  ) {
+  ): Promise<Post> {
     const { title, description } = body;
-    let createdPost;
+
     if (localFilePath) {
-      const imageUrl = await uploadToCloudinary(localFilePath);
-      createdPost = await this.repo.createPost(
-        title,
-        description,
-        userId,
-        imageUrl,
-      );
-    } else {
-      createdPost = await this.repo.createPost(title, description, userId);
+      const imageUrl = await this.fileService.upload(localFilePath);
+      return await this.repo.createPost(title, description, userId, imageUrl);
     }
-    return createdPost;
+    return await this.repo.createPost(title, description, userId);
   }
 
-  async getUserPosts(userId: string) {
+  async getUserPosts(userId: string): Promise<Post[]> {
     const posts = await this.repo.getPostsByUserId(userId);
     return posts;
   }
 
-  async getAllPosts() {
-    const posts = await this.repo.getAllPosts();
+  async getAllPosts(cursor?:string,limit?:number): Promise<Post[]> {
+    const posts = await this.repo.getAllPosts(cursor,limit);
     return posts;
   }
 
-  async updatePost(postId: string, userId: string, data: updatePostDTO) {
+  async updatePost(
+    postId: string,
+    userId: string,
+    data: updatePostDTO,
+  ): Promise<Post> {
     const post = await this.repo.getPostByPostIdAndUserId(postId, userId);
     if (!post) {
       throw new AppError("Post not found", 404);
@@ -49,15 +50,14 @@ export class PostService {
     return updatedPost;
   }
 
-  async deletePost(postId: string, userId: string) {
+  async deletePost(postId: string, userId: string): Promise<void> {
     const post = await this.repo.getPostByPostIdAndUserId(postId, userId);
     if (!post) {
       throw new AppError("Post not found", 404);
     }
     if (post.imageUrl) {
-      await deleteFromCloudinary(post.imageUrl);
+      await this.fileService.delete(post.imageUrl);
     }
     await this.repo.deletePost(postId);
-    return true;
   }
 }

@@ -12,7 +12,7 @@ export interface IPostRepository {
   getPostsByUserId(userId: string): Promise<Post[]>;
   getPostByPostId(postId: string): Promise<Post | null>;
 
-  getAllPosts(): Promise<Post[]>;
+  getAllPosts(cursor?:string, limit?:number): Promise<Post[]>;
 
   getPostByPostIdAndUserId(
     postId: string,

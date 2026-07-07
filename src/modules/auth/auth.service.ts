@@ -1,3 +1,4 @@
+import { User } from "@prisma/client";
 import { IJwtPayload, IUserResponse } from "../../types/index.js";
 import { AppError } from "../../utils/AppError.js";
 import {
@@ -8,7 +9,6 @@ import {
 import {
   generateAccessToken,
   generateRefreshToken,
-  setCookies,
   verifyAccessToken,
   verifyRefreshToken,
 } from "../../utils/jwt.helper.js";
@@ -21,11 +21,17 @@ import {
   registerUserDTO,
 } from "./auth.schema.js";
 
+import {
+  AuthResponse,
+  AuthTokens,
+  CurrentUserResponse,
+} from "./auth.types.js";
+
 
 export class AuthService {
   constructor(private readonly repo: IAuthRepository) {}
 
-  async registerUser(body: registerUserDTO) {
+  async registerUser(body: registerUserDTO):Promise<AuthResponse> {
     const { username, email, password } = body;
 
     const existingUserByUsername = await this.repo.findUserByUsername(username);
@@ -56,7 +62,7 @@ export class AuthService {
       refreshToken,
     };
   }
-  async loginUser(body: loginUserDTO) {
+  async loginUser(body: loginUserDTO) : Promise<AuthResponse> {
     const { email, password } = body;
 
     const user = await this.repo.findUserByEmail(email);
@@ -89,7 +95,7 @@ export class AuthService {
     };
   }
 
-  async refreshToken(body: refreshTokenDTO) {
+  async refreshToken(body: refreshTokenDTO) : Promise<AuthTokens> {
     const { token } = body;
     if (!token) {
       throw new AppError("Token is required", 401);
@@ -127,12 +133,12 @@ export class AuthService {
     };
   }
 
-  async getCurrentUser(user: IUserResponse) {
+  async getCurrentUser(user: IUserResponse):Promise<CurrentUserResponse> {
     return {
       user: toUserResponse(user),
     };
   }
-  async logout(body: logoutUserDTO) {
+  async logout(body: logoutUserDTO):Promise<void> {
     const { refreshToken } = body;
     if (!refreshToken) {
       throw new AppError("Refresh Token required", 400);
@@ -146,19 +152,29 @@ export class AuthService {
     await this.repo.deleteRefreshTokenById(existingToken.id);
   }
 
-  async logoutAllDevices(userId: string) {
+  async logoutAllDevices(userId: string):Promise<void> {
     if (!userId) {
       throw new AppError("User ID is required", 400);
     }
     await this.repo.deleteAllRefreshTokensByUserId(userId);
   }
 
-  async authenticate(token:string){
-    const decoded=verifyAccessToken(token) as IJwtPayload
-    const user=await this.repo.findUserById(decoded.userId);
-    if(!user){
-      throw new AppError("Unauthorized request",401)
-    }
-    return user
+
+async authenticate(token: string): Promise<User> {
+  let decoded: IJwtPayload;
+
+  try {
+    decoded = verifyAccessToken(token) as IJwtPayload;
+  } catch {
+    throw new AppError("Unauthorized request", 401);
   }
+
+  const user = await this.repo.findUserById(decoded.userId);
+
+  if (!user) {
+    throw new AppError("Unauthorized request", 401);
+  }
+
+  return user;
+}
 }

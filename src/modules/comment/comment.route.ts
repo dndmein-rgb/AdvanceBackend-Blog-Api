@@ -1,14 +1,17 @@
 import express from "express";
-import { verifyUser } from "../../middleware/auth.middleware.js";
-import { authService } from "../auth/auth.container.js";
 import { validate } from "../../middleware/validate.middleware.js";
 import { createCommentSchema } from "./comment.schema.js";
-import { createCommentController ,deleteCommentController } from "./comment.controller.js";
+import { createCommentController ,deleteCommentController, getCommentsByPostIdController } from "./comment.controller.js";
+import { authenticate } from "../auth/auth.route.js";
+
 
 const router=express.Router();
 
-router.route("/create/post/:postId").post(verifyUser(authService),validate(createCommentSchema),createCommentController)
 
-router.route("/delete/:commentId").delete(verifyUser(authService),deleteCommentController)
+router.route("/create/post/:postId").post(authenticate,validate(createCommentSchema),createCommentController)
+
+router.route("/:postId").get(authenticate,getCommentsByPostIdController)
+
+router.route("/delete/:commentId").delete(authenticate,deleteCommentController)
 
 export default router;

@@ -9,7 +9,7 @@ export class PostRepository implements IPostRepository {
     description: string,
     userId: string,
     imageUrl?: string,
-  ) {
+  ): Promise<Post> {
     let createdPost;
     if (imageUrl) {
       createdPost = await prisma.post.create({
@@ -32,7 +32,7 @@ export class PostRepository implements IPostRepository {
     return createdPost;
   }
 
-  async getPostsByUserId(userId: string) {
+  async getPostsByUserId(userId: string): Promise<Post[]> {
     const posts = await prisma.post.findMany({
       where: {
         userId,
@@ -41,7 +41,7 @@ export class PostRepository implements IPostRepository {
     return posts;
   }
 
-  async getPostByPostId(postId: string) {
+  async getPostByPostId(postId: string): Promise<Post | null> {
     const post = await prisma.post.findUnique({
       where: {
         id: postId,
@@ -50,16 +50,31 @@ export class PostRepository implements IPostRepository {
     return post;
   }
 
-  async getAllPosts() {
+  async getAllPosts(cursor?: string ,limit: number = 5): Promise<Post[]> {
     const posts = await prisma.post.findMany({
-      include:{
-        comments:true
-      }
+      take: limit,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        imageUrl: true,
+        createdAt: true,
+        userId: true,
+        updatedAt:true
+      },
     });
     return posts;
   }
 
-  async getPostByPostIdAndUserId(postId: string, userId: string) {
+  async getPostByPostIdAndUserId(
+    postId: string,
+    userId: string,
+  ): Promise<Post | null> {
     const post = await prisma.post.findFirst({
       where: {
         userId,
@@ -68,7 +83,7 @@ export class PostRepository implements IPostRepository {
     });
     return post;
   }
-  async updatePost(postId: string, data: updatePostDTO) {
+  async updatePost(postId: string, data: updatePostDTO): Promise<Post> {
     const updatedPost = await prisma.post.update({
       where: {
         id: postId,
@@ -82,7 +97,7 @@ export class PostRepository implements IPostRepository {
     return updatedPost;
   }
 
-  async deletePost(postId: string) {
+  async deletePost(postId: string): Promise<Post> {
     return await prisma.post.delete({
       where: {
         id: postId,

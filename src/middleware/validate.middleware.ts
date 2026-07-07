@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { ZodObject } from "zod";
+import { AppError } from "../utils/AppError.js";
 
 export const validate =
 
@@ -12,10 +13,11 @@ export const validate =
         field: err.path.join("."),
         message: err.message,
       }));
-      return res.status(400).json({
-        message: "Validation failed",
-        errors,
-      });
+      // return res.status(400).json({
+      //   message: "Validation failed",
+      //   errors,
+      // });
+      throw new AppError(errors.map((e)=>`${e.field}: ${e.message}`).join(", "), 400);
     }
 
     // overwriting with validated and sanitized data
